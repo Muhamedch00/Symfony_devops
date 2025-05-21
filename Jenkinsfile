@@ -80,7 +80,7 @@ pipeline {
       steps {
         echo '📦 Push de l’image Docker sur Docker Hub...'
         withCredentials([usernamePassword(
-          credentialsId: 'dockerhub-creds',
+          credentialsId: 'docker-hub-creds', // 🔧 modifié ici
           usernameVariable: 'DOCKER_USER',
           passwordVariable: 'DOCKER_PASS'
         )]) {
