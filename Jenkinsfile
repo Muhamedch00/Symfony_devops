@@ -32,9 +32,13 @@ pipeline {
                             -Dsonar.projectKey=SymfonyDevOps \
                             -Dsonar.sources=. \
                             -Dsonar.php.coverage.reportPaths=coverage.xml \
-                            -Dsonar.host.url=$SONAR_HOST_URL \
                             -Dsonar.login=$SONAR_TOKEN
                     '''
+                    // 👉 Alternative si sonar-scanner n’est pas installé :
+                    // docker run --rm -v "$PWD":/usr/src sonarsource/sonar-scanner-cli \
+                    //   -Dsonar.projectKey=SymfonyDevOps \
+                    //   -Dsonar.sources=. \
+                    //   -Dsonar.login=$SONAR_TOKEN
                 }
             }
         }
@@ -49,7 +53,13 @@ pipeline {
 
         stage('Build & Push Docker') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
                     sh '''
                         docker build -t $DOCKER_IMAGE .
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
