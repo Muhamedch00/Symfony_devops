@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Cloner le dépôt') {
             steps {
-                git url: 'https://github.com/Muhamedch00/Symfony_devops.git'
+git credentialsId: 'github-token', url: 'https://github.com/Muhamedch00/Symfony_devops.git' 
             }
         }
 
