@@ -74,9 +74,9 @@ pipeline {
       steps {
         echo "🚀 Lancement des services Symfony + Monitoring"
         sh '''
-          docker-compose down || true
-          docker-compose up -d --build
-          docker-compose ps
+          docker compose down || true
+          docker compose up -d --build
+          docker compose ps
         '''
       }
     }
