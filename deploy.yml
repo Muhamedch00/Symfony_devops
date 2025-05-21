@@ -6,7 +6,7 @@
     - name: Arrêter l'application existante
       shell: docker compose down
       args:
-        chdir: C:\Users\moham\OneDrive\Bureau\exam_symfony_devops
+        chdir: /home/ubuntu/exam_symfony_devops  # chemin Linux sur la VM distante
 
     - name: Télécharger la dernière image depuis DockerHub
       shell: docker pull muhamd/symfony-app
@@ -14,4 +14,4 @@
     - name: Redémarrer l'application avec Docker Compose
       shell: docker compose up -d --build
       args:
-        chdir: /chemin/vers/ton/projet
+        chdir: /home/ubuntu/exam_symfony_devops  # même chemin Linux
