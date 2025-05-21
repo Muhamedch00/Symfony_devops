@@ -56,7 +56,6 @@ pipeline {
                         '''
                     }
                     
-                    // Vérifier si SonarQube est disponible
                     script {
                         try {
                             timeout(time: 1, unit: 'MINUTES') {
@@ -78,7 +77,7 @@ pipeline {
                 """
             }
         }
-        
+
         stage('Push Docker') {
             when {
                 expression { 
@@ -86,6 +85,7 @@ pipeline {
                 }
             }
             steps {
+                echo '📦 Push de l’image Docker sur Docker Hub...'
                 withCredentials([
                     usernamePassword(
                         credentialsId: 'dockerhub-creds',
@@ -93,10 +93,10 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-                    sh '''
+                    sh """
                         echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                        docker push $DOCKER_IMAGE
-                    '''
+                        docker push ${DOCKER_IMAGE}
+                    """
                 }
             }
         }
