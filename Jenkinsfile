@@ -15,14 +15,34 @@ pipeline {
 
         stage('Installation des dépendances PHP') {
             steps {
-                sh 'docker run --rm -v $PWD:/app -w /app composer:2 composer install --no-interaction --prefer-dist'
+                sh '''
+                    docker run --rm -v "$PWD":/app -w /app composer:2 sh -c "
+                        git config --global --add safe.directory /app &&
+                        composer install --no-interaction --prefer-dist
+                    "
+                '''
             }
         }
 
         stage('Analyse SonarQube') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    sh 'sonar-scanner'
+                    sh '''
+                        sonar-scanner \
+                            -Dsonar.projectKey=SymfonyDevOps \
+                            -Dsonar.sources=. \
+                            -Dsonar.php.coverage.reportPaths=coverage.xml \
+                            -Dsonar.host.url=$SONAR_HOST_URL \
+                            -Dsonar.login=$SONAR_TOKEN
+                    '''
+                }
+            }
+        }
+
+        stage('Attente de la Quality Gate') {
+            steps {
+                timeout(time: 1, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
@@ -43,6 +63,12 @@ pipeline {
             steps {
                 sh 'ansible-playbook -i inventory.ini deploy.yml'
             }
- }
-}
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+    }
 }
