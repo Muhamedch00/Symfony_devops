@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        SONAR_TOKEN = credentials('sonarqube-token')
+        SONAR_TOKEN = credentials('sonar-token')
         DOCKER_IMAGE = "muhamd/symfony-app"
     }
 
