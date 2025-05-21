@@ -1,17 +1,18 @@
+---
 - name: Déploiement de l'application Symfony
   hosts: web
   become: true
-  tasks:
 
-    - name: Arrêter l'application existante
+  tasks:
+    - name: Arrêter l'application Docker existante
       shell: docker compose down
       args:
-        chdir: /home/mohamed/exam_symfony_devops  # chemin Linux sur la VM distante
+        chdir: /chemin/vers/ton/projet  # À remplacer par le chemin exact sur la machine distante
 
     - name: Télécharger la dernière image depuis DockerHub
-      shell: docker pull muhamd/symfony-app
+      shell: docker pull muhamd/symfony-app:36
 
     - name: Redémarrer l'application avec Docker Compose
       shell: docker compose up -d --build
       args:
-        chdir: /home/mohamed/exam_symfony_devops  # même chemin Linux
+        chdir: /chemin/vers/ton/projet  # Même chemin que précédemment
