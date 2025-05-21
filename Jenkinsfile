@@ -3,7 +3,7 @@ pipeline {
 
   environment {
     DOCKER_IMAGE = "muhamd/symfony-app:${BUILD_NUMBER}"
-    SONARQUBE_IP = "172.17.0.1" // Remplacez par l'IP de votre serveur SonarQube
+    SONARQUBE_IP = "172.17.0.1" 
   }
 
   stages {
@@ -80,7 +80,7 @@ pipeline {
       steps {
         echo '📦 Push de l’image Docker sur Docker Hub...'
         withCredentials([usernamePassword(
-          credentialsId: 'docker-hub-creds', // 🔧 modifié ici
+          credentialsId: 'docker-hub-creds', 
           usernameVariable: 'DOCKER_USER',
           passwordVariable: 'DOCKER_PASS'
         )]) {
