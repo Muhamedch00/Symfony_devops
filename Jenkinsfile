@@ -1,18 +1,15 @@
 pipeline {
     agent any
-
     environment {
         SONAR_TOKEN = credentials('sonar-token')
         DOCKER_IMAGE = "muhamd/symfony-app"
     }
-
     stages {
         stage('Cloner le dépôt') {
             steps {
                 git url: 'https://github.com/Muhamedch00/Symfony_devops.git'
             }
         }
-
         stage('Installation des dépendances PHP') {
             steps {
                 sh '''
@@ -23,26 +20,23 @@ pipeline {
                 '''
             }
         }
-
         stage('Analyse SonarQube') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     sh '''
+                        docker run --rm \
+                        -v "$PWD":/usr/src \
+                        -w /usr/src \
+                        sonarsource/sonar-scanner-cli \
                         sonar-scanner \
-                            -Dsonar.projectKey=SymfonyDevOps \
-                            -Dsonar.sources=. \
-                            -Dsonar.php.coverage.reportPaths=coverage.xml \
-                            -Dsonar.login=$SONAR_TOKEN
+                        -Dsonar.projectKey=SymfonyDevOps \
+                        -Dsonar.sources=. \
+                        -Dsonar.php.coverage.reportPaths=coverage.xml \
+                        -Dsonar.login=$SONAR_TOKEN
                     '''
-                    // 👉 Alternative si sonar-scanner n’est pas installé :
-                    // docker run --rm -v "$PWD":/usr/src sonarsource/sonar-scanner-cli \
-                    //   -Dsonar.projectKey=SymfonyDevOps \
-                    //   -Dsonar.sources=. \
-                    //   -Dsonar.login=$SONAR_TOKEN
                 }
             }
         }
-
         stage('Attente de la Quality Gate') {
             steps {
                 timeout(time: 1, unit: 'MINUTES') {
@@ -50,7 +44,6 @@ pipeline {
                 }
             }
         }
-
         stage('Build & Push Docker') {
             steps {
                 withCredentials([
@@ -68,14 +61,12 @@ pipeline {
                 }
             }
         }
-
         stage('Déploiement via Ansible') {
             steps {
                 sh 'ansible-playbook -i inventory.ini deploy.yml'
             }
         }
     }
-
     post {
         always {
             cleanWs()
