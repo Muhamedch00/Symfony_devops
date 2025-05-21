@@ -2,22 +2,20 @@ pipeline {
   agent any
 
   environment {
-    SONAR_TOKEN   = credentials('sonar-token')
-    DOCKER_IMAGE  = "muhamd/symfony-app:${BUILD_NUMBER}"
-    SONARQUBE_URL = "http://10.0.2.15:9000"
+    DOCKER_IMAGE = "muhamd/symfony-app:${BUILD_NUMBER}"
+    SONARQUBE_IP = "172.17.0.1" // Remplacez par l'IP de votre serveur SonarQube
   }
 
   stages {
+
     stage('Cloner le dépôt') {
       steps {
-        echo "🛎 Clonage du dépôt Symfony DevOps"
         git url: 'https://github.com/Muhamedch00/Symfony_devops.git'
       }
     }
 
     stage('Installation des dépendances PHP') {
       steps {
-        echo "📦 Installation des dépendances avec Composer"
         sh '''
           docker run --rm -v "$PWD":/app -w /app composer:2 sh -c "
             git config --global --add safe.directory /app &&
@@ -29,7 +27,6 @@ pipeline {
 
     stage('Tests Unitaires et Couverture') {
       steps {
-        echo "🧪 Lancement des tests"
         sh '''
           docker run --rm -v "$PWD":/app -w /app php:8.2-cli bash -c "
             apt-get update && apt-get install -y git zip unzip libzip-dev &&
@@ -42,58 +39,46 @@ pipeline {
 
     stage('Analyse SonarQube') {
       steps {
-        echo "📊 Analyse SonarQube"
-        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+        withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
           sh '''
             docker run --rm \
+              --add-host=sonarqube:${SONARQUBE_IP} \
               -v "$PWD":/usr/src \
               sonarsource/sonar-scanner-cli \
               -Dsonar.projectKey=SymfonyDevOps \
               -Dsonar.sources=. \
               -Dsonar.exclusions=vendor/**,var/**,tests/** \
               -Dsonar.php.coverage.reportPaths=coverage.xml \
-              -Dsonar.host.url=${SONARQUBE_URL} \
-              -Dsonar.login=${SONAR_TOKEN}
+              -Dsonar.host.url=http://sonarqube:9000 \
+              -Dsonar.login=$SONAR_TOKEN
           '''
+        }
 
-          script {
-            try {
-              timeout(time: 1, unit: 'MINUTES') {
-                waitForQualityGate abortPipeline: true
-              }
-            } catch (Exception e) {
-              echo "Erreur Quality Gate: ${e.message}"
-              currentBuild.result = 'UNSTABLE'
+        script {
+          try {
+            timeout(time: 1, unit: 'MINUTES') {
+              waitForQualityGate abortPipeline: true
             }
+          } catch (Exception e) {
+            echo "Erreur lors de l'attente de la Quality Gate: ${e.message}"
+            currentBuild.result = 'UNSTABLE'
           }
         }
       }
     }
 
-    stage('Démarrer les services Docker') {
+    stage('Build Docker') {
       steps {
-        echo "🚀 Lancement des services Symfony + Monitoring"
-        sh '''
-          docker compose down || true
-          docker compose up -d --build
-          docker compose ps
-        '''
-      }
-    }
-
-    stage('Build Docker Image') {
-      steps {
-        echo "🐳 Construction de l’image Docker"
         sh "docker build -t ${DOCKER_IMAGE} ."
       }
     }
 
-    stage('Push Docker Image') {
+    stage('Push Docker') {
       when {
-        expression { return currentBuild.resultIsBetterOrEqualTo('UNSTABLE') }
+        expression { currentBuild.resultIsBetterOrEqualTo('UNSTABLE') }
       }
       steps {
-        echo "📤 Push sur Docker Hub"
+        echo '📦 Push de l’image Docker sur Docker Hub...'
         withCredentials([usernamePassword(
           credentialsId: 'dockerhub-creds',
           usernameVariable: 'DOCKER_USER',
@@ -107,37 +92,20 @@ pipeline {
       }
     }
 
-    stage('Déploiement Ansible') {
+    stage('Déploiement via Ansible') {
       when {
-        expression { return currentBuild.resultIsBetterOrEqualTo('UNSTABLE') }
+        expression { currentBuild.resultIsBetterOrEqualTo('UNSTABLE') }
       }
       steps {
-        echo "🚀 Déploiement via Ansible"
-        sh '''
-          echo "IMAGE=${DOCKER_IMAGE}" > .env
-          ansible-playbook -i inventory.ini deploy.yml
-        '''
-      }
-    }
-
-    stage('Vérification Monitoring') {
-      steps {
-        echo "⏳ Vérification de Grafana & Prometheus"
-        sh 'sleep 30'
         script {
-          def prometheusStatus = sh(script: 'curl -s -o /dev/null -w "%{http_code}" http://10.0.2.15:9090', returnStdout: true).trim()
-          def grafanaStatus    = sh(script: 'curl -s -o /dev/null -w "%{http_code}" http://10.0.2.15:3001', returnStdout: true).trim()
-
-          if (prometheusStatus != "200") {
-            error "❌ Prometheus ne répond pas (HTTP ${prometheusStatus})"
-          } else {
-            echo "✅ Prometheus est UP"
-          }
-
-          if (grafanaStatus != "200") {
-            error "❌ Grafana ne répond pas (HTTP ${grafanaStatus})"
-          } else {
-            echo "✅ Grafana est UP"
+          try {
+            sh '''
+              echo "IMAGE=${DOCKER_IMAGE}" > .env
+              ansible-playbook -i inventory.ini deploy.yml
+            '''
+          } catch (Exception e) {
+            echo "Erreur lors du déploiement : ${e.message}"
+            currentBuild.result = 'FAILURE'
           }
         }
       }
@@ -146,17 +114,16 @@ pipeline {
 
   post {
     always {
-      echo '📋 Nettoyage du workspace'
       cleanWs()
     }
     success {
-      echo '✅ Pipeline exécutée avec succès.'
+      echo '✅ Pipeline exécuté avec succès!'
     }
     failure {
-      echo '❌ Le pipeline a échoué.'
+      echo '❌ Le pipeline a échoué. Vérifiez les journaux pour plus de détails.'
     }
     unstable {
-      echo '⚠️ Le pipeline est instable.'
+      echo '⚠️ Le pipeline est instable mais a continué.'
     }
   }
 }
