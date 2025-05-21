@@ -19,9 +19,15 @@ security:
             form_login:
                 login_path: app_login
                 check_path: app_login
-                enable_csrf: true
+                default_target_path: app_client_index
+                username_parameter: _username
+                password_parameter: _password
+                csrf_token_id: authenticate
             logout:
                 path: app_logout
+                target: app_login  # Redirection vers la page de connexion après logout
+                csrf_token_id: logout
+                enable_csrf: true
                 # where to redirect after logout
                 # target: app_any_route
 

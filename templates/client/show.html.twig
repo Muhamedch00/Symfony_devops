@@ -1,42 +1,261 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Client{% endblock %}
+{% block title %}Détails Client - {{ client.companyName }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* Client details page specific styles */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-700) 0%, var(--primary-800) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(3, 105, 161, 0.15);
+            text-align: center;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-header h1 i {
+            margin-right: 12px;
+            color: var(--primary-300);
+        }
+
+        .details-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .client-details {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .client-details th {
+            width: 30%;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-600);
+            background-color: var(--primary-50);
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .client-details td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            background-color: white;
+        }
+
+        .client-details tr:last-child th,
+        .client-details tr:last-child td {
+            border-bottom: none;
+        }
+
+        .client-details tr:hover td {
+            background-color: var(--primary-50);
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-back {
+            background-color: var(--gray-100);
+            color: var(--gray-700);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--gray-200);
+        }
+
+        .btn-back:hover {
+            background-color: var(--gray-200);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-edit {
+            background: linear-gradient(to right, var(--primary-600), var(--primary-700));
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-edit:hover {
+            background: linear-gradient(to right, var(--primary-700), var(--primary-800));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-delete {
+            background: linear-gradient(to right, var(--red-500), var(--red-600));
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-delete:hover {
+            background: linear-gradient(to right, var(--red-600), var(--red-700));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(220, 38, 38, 0.15);
+        }
+
+        .btn-icon {
+            margin-right: 8px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 1.5rem;
+            }
+
+            .details-container {
+                padding: 1.5rem;
+            }
+
+            .client-details th,
+            .client-details td {
+                padding: 0.75rem 1rem;
+                display: block;
+                width: 100%;
+            }
+
+            .client-details th {
+                background-color: var(--primary-100);
+                border-bottom: none;
+            }
+
+            .client-details tr {
+                margin-bottom: 1rem;
+                display: block;
+                border-bottom: 1px solid var(--gray-200);
+            }
+
+            .client-details tr:last-child {
+                border-bottom: none;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .btn-back,
+            .btn-edit,
+            .btn-delete {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
-    <h1>Client</h1>
+    {{ parent() }}
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ client.id }}</td>
-            </tr>
-            <tr>
-                <th>ManagerName</th>
-                <td>{{ client.managerName }}</td>
-            </tr>
-            <tr>
-                <th>CompanyName</th>
-                <td>{{ client.companyName }}</td>
-            </tr>
-            <tr>
-                <th>PhoneNumber</th>
-                <td>{{ client.phoneNumber }}</td>
-            </tr>
-            <tr>
-                <th>Address</th>
-                <td>{{ client.address }}</td>
-            </tr>
-            <tr>
-                <th>Country</th>
-                <td>{{ client.country }}</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="container mt-4">
+        <div class="page-header">
+            <h1>
+                <i class="fas fa-user-tie"></i>
+                Détails du Client - {{ client.companyName }}
+            </h1>
+        </div>
 
-    <a href="{{ path('app_client_index') }}">back to list</a>
+        <div class="details-container">
+            <table class="client-details">
+                <tbody>
+                <tr>
+                    <th>ID</th>
+                    <td>{{ client.id }}</td>
+                </tr>
+                <tr>
+                    <th>Nom du Responsable</th>
+                    <td>{{ client.managerName }}</td>
+                </tr>
+                <tr>
+                    <th>Nom de l'Entreprise</th>
+                    <td>{{ client.companyName }}</td>
+                </tr>
+                <tr>
+                    <th>Téléphone</th>
+                    <td>{{ client.phoneNumber }}</td>
+                </tr>
+                <tr>
+                    <th>Adresse</th>
+                    <td>{{ client.address }}</td>
+                </tr>
+                <tr>
+                    <th>Pays</th>
+                    <td>{{ client.country }}</td>
+                </tr>
+                </tbody>
+            </table>
 
-    <a href="{{ path('app_client_edit', {'id': client.id}) }}">edit</a>
+            <div class="action-buttons">
+                <a href="{{ path('app_client_index') }}" class="btn-back">
+                    <i class="fas fa-arrow-left btn-icon"></i>
+                    Retour à la liste
+                </a>
+                <a href="{{ path('app_client_edit', {'id': client.id}) }}" class="btn-edit">
+                    <i class="fas fa-edit btn-icon"></i>
+                    Modifier
+                </a>
+                {{ include('client/_delete_form.html.twig') }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
 
-    {{ include('client/_delete_form.html.twig') }}
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://kit.fontawesome.com/c26cd2166c.js" crossorigin="anonymous"></script>
+    <script>
+        // Confirmation for delete action
+        document.querySelector('.btn-delete')?.addEventListener('click', function(e) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer ce client ? Cette action est irréversible.')) {
+                e.preventDefault();
+            }
+        });
+    </script>
 {% endblock %}

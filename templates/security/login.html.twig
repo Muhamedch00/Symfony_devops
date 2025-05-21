@@ -1,38 +1,288 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Log in!{% endblock %}
+{% block title %}Connexion | Plateforme Professionnelle{% endblock %}
 
-{% block body %}
-    <form method="post">
-        {% if error %}
-            <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-        {% endif %}
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+    /* Login page specific styles */
+    body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8fafc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 2rem;
+    }
 
-        {% if app.user %}
-            <div class="mb-3">
-                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
+    .login-container {
+    width: 100%;
+    max-width: 450px;
+    animation: fadeInUp 0.5s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    }
+
+    .login-card:hover {
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    padding: 2.5rem;
+    text-align: center;
+    }
+
+    .card-header h1 {
+    margin: 1rem 0 0.5rem;
+    font-weight: 600;
+    font-size: 1.5rem;
+    }
+
+    .card-header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+    }
+
+    .logo {
+    height: 50px;
+    margin-bottom: 1rem;
+    }
+
+    .card-body {
+    padding: 2rem;
+    }
+
+    .alert {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    }
+
+    .alert-danger {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    }
+
+    .alert-info {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+    }
+
+    .alert i {
+    margin-right: 0.5rem;
+    }
+
+    .form-group {
+    margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.95rem;
+    }
+
+    .form-control {
+    width: 100%;
+    padding: 0.85rem 1.25rem;
+    font-size: 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background-color: #f8fafc;
+    transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+    outline: none;
+    border-color: #4f46e5;
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+    }
+
+    .password-container {
+    position: relative;
+    }
+
+    .toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #64748b;
+    transition: color 0.2s;
+    }
+
+    .toggle-password:hover {
+    color: #4f46e5;
+    }
+
+    .remember-me {
+    display: flex;
+    align-items: center;
+    margin: 1rem 0;
+    }
+
+    .remember-me input {
+    margin-right: 0.5rem;
+    }
+
+    .remember-me label {
+    font-size: 0.9rem;
+    color: #475569;
+    cursor: pointer;
+    }
+
+    .login-btn {
+    width: 100%;
+    padding: 0.9rem;
+    background: linear-gradient(to right, #4f46e5, #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    }
+
+    .login-btn:hover {
+    background: linear-gradient(to right, #6366f1, #8b5cf6);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .login-btn i {
+    margin-right: 0.5rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 576px) {
+    body {
+    padding: 1rem;
+    }
+
+    .card-header {
+    padding: 1.5rem;
+    }
+
+    .card-body {
+    padding: 1.5rem;
+    }
+    }
+    </style>
+    {% endblock %}
+
+    {% block body %}
+    <div class="login-container">
+        <div class="login-card">
+            <div class="card-header">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo Entreprise" class="logo">
+                <h1>Connexion Professionnelle</h1>
+                <p>Accédez à votre tableau de bord</p>
             </div>
-        {% endif %}
 
-        <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
-        <label for="username">Email</label>
-        <input type="email" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="email" required autofocus>
-        <label for="password">Password</label>
-        <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
-        <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
+            <div class="card-body">
+                {% if error %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ error.messageKey|trans(error.messageData, 'security') }}
+                    </div>
+                {% endif %}
 
-        {#
-            Uncomment this section and add a remember_me option below your firewall to activate remember me functionality.
-            See https://symfony.com/doc/current/security/remember_me.html
 
-            <div class="checkbox mb-3">
-                <input type="checkbox" name="_remember_me" id="_remember_me">
-                <label for="_remember_me">Remember me</label>
+                <form method="post" class="login-form">
+                    <div class="form-group">
+                        <label for="username" class="form-label">
+                            <i class="fas fa-envelope"></i> Email professionnel
+                        </label>
+                        <input
+                                type="email"
+                                value="{{ last_username }}"
+                                name="_username"
+                                id="username"
+                                class="form-control"
+                                placeholder="email@entreprise.com"
+                                required
+                                autofocus
+                                autocomplete="username"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock"></i> Mot de passe
+                        </label>
+                        <div class="password-container">
+                            <input
+                                    type="password"
+                                    name="_password"
+                                    id="password"
+                                    class="form-control"
+                                    placeholder="••••••••"
+                                    required
+                                    autocomplete="current-password"
+                            >
+                            <span class="toggle-password" onclick="togglePasswordVisibility()">
+                                <i class="fas fa-eye"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="remember-me">
+                        <input type="checkbox" id="remember_me" name="_remember_me" checked>
+                        <label for="remember_me">Se souvenir de moi</label>
+                    </div>
+
+                   <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                    <button class="login-btn" type="submit">
+                        <i class="fas fa-sign-in-alt"></i> Se connecter
+                    </button>
+                </form>
             </div>
-        #}
+        </div>
+    </div>
 
-        <button class="btn btn-lg btn-primary" type="submit">
-            Sign in
-        </button>
-    </form>
+    <script>
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const icon = document.querySelector('.toggle-password i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+    </script>
 {% endblock %}

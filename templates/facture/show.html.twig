@@ -1,41 +1,309 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Facture{% endblock %}
+{% block title %}Facture #{{ facture.invoiceNumber }}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* Invoice show page specific styles */
+        .page-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+            text-align: center;
+        }
+
+        .page-header h1 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-header h1 i {
+            margin-right: 12px;
+            color: #a5b4fc;
+        }
+
+        .details-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .invoice-details {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .invoice-details th {
+            width: 30%;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-weight: 600;
+            color: #6b7280;
+            background-color: #f5f3ff;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .invoice-details td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            background-color: white;
+        }
+
+        .invoice-details tr:last-child th,
+        .invoice-details tr:last-child td {
+            border-bottom: none;
+        }
+
+        .invoice-details tr:hover td {
+            background-color: #f5f3ff;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .status-paid {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-overdue {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .amount-value {
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .amount-value::after {
+            content: " €";
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-back {
+            background-color: #f3f4f6;
+            color: #374151;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+        }
+
+        .btn-back:hover {
+            background-color: #e5e7eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-edit {
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-edit:hover {
+            background: linear-gradient(to right, #6366f1, #8b5cf6);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-delete {
+            background: linear-gradient(to right, #ef4444, #dc2626);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-delete:hover {
+            background: linear-gradient(to right, #dc2626, #b91c1c);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(220, 38, 38, 0.15);
+        }
+
+        .btn-icon {
+            margin-right: 8px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 1.5rem;
+            }
+
+            .details-container {
+                padding: 1.5rem;
+            }
+
+            .invoice-details th,
+            .invoice-details td {
+                padding: 0.75rem 1rem;
+                display: block;
+                width: 100%;
+            }
+
+            .invoice-details th {
+                background-color: #f5f3ff;
+                border-bottom: none;
+            }
+
+            .invoice-details tr {
+                margin-bottom: 1rem;
+                display: block;
+                border-bottom: 1px solid #e5e7eb;
+            }
+
+            .invoice-details tr:last-child {
+                border-bottom: none;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            .btn-back,
+            .btn-edit,
+            .btn-delete {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
-    <h1>Facture</h1>
+    {{ parent() }}
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ facture.id }}</td>
-            </tr>
-            <tr>
-                <th>InvoiceNumber</th>
-                <td>{{ facture.invoiceNumber }}</td>
-            </tr>
-            <tr>
-                <th>BillingDate</th>
-                <td>{{ facture.billingDate|date('d/m/Y')}}</td>
-            <tr>
-                <th>Amount</th>
-                <td>{{ facture.amount }}</td>
-            </tr>
-            <tr>
-                <th>Status</th>
-                <td>{{ facture.status }}</td>
-            </tr>
-            <tr>
-                <th>Note</th>
-                <td>{{ facture.note }}</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="container mt-4">
+        <div class="page-header">
+            <h1>
+                <i class="fas fa-file-invoice"></i>
+                Facture #{{ facture.invoiceNumber }}
+            </h1>
+        </div>
 
-    <a href="{{ path('app_facture_index') }}">back to list</a>
+        <div class="details-container">
+            <table class="invoice-details">
+                <tbody>
+                <tr>
+                    <th>ID</th>
+                    <td>{{ facture.id }}</td>
+                </tr>
+                <tr>
+                    <th>Numéro de facture</th>
+                    <td>{{ facture.invoiceNumber }}</td>
+                </tr>
+                <tr>
+                    <th>Date de facturation</th>
+                    <td>{{ facture.billingDate|date('d/m/Y') }}</td>
+                </tr>
+                <tr>
+                    <th>Montant</th>
+                    <td class="amount-value">{{ facture.amount }}</td>
+                </tr>
+                <tr>
+                    <th>Statut</th>
+                    <td>
+                            <span class="status-badge status-{{ facture.status|lower }}">
+                                {{ facture.status }}
+                            </span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Notes</th>
+                    <td>{{ facture.note ? facture.note : 'Aucune note' }}</td>
+                </tr>
+                <tr>
+                    <th>Client</th>
+                    <td>{{ facture.client.companyName }}</td>
+                </tr>
+                </tbody>
+            </table>
 
-    <a href="{{ path('app_facture_edit', {'id': facture.id}) }}">edit</a>
+            <div class="action-buttons">
+                <a href="{{ path('app_facture_index') }}" class="btn-back">
+                    <i class="fas fa-arrow-left btn-icon"></i>
+                    Retour à la liste
+                </a>
+                <a href="{{ path('app_facture_edit', {'id': facture.id}) }}" class="btn-edit">
+                    <i class="fas fa-edit btn-icon"></i>
+                    Modifier
+                </a>
+                {{ include('facture/_delete_form.html.twig') }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
 
-    {{ include('facture/_delete_form.html.twig') }}
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://kit.fontawesome.com/c26cd2166c.js" crossorigin="anonymous"></script>
+    <script>
+        // Format amount with currency
+        document.querySelector('.amount-value').textContent = parseFloat(document.querySelector('.amount-value').textContent).toLocaleString('fr-FR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        // Confirmation for delete action
+        document.querySelector('.btn-delete')?.addEventListener('click', function(e) {
+            if (!confirm('Êtes-vous sûr de vouloir supprimer cette facture ? Cette action est irréversible.')) {
+                e.preventDefault();
+            }
+        });
+    </script>
 {% endblock %}

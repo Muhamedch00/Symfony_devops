@@ -1,0 +1,17 @@
+- name: Déploiement de l'application Symfony
+  hosts: web
+  become: true
+  tasks:
+
+    - name: Arrêter l'application existante
+      shell: docker compose down
+      args:
+        chdir: C:\Users\moham\OneDrive\Bureau\exam_symfony_devops
+
+    - name: Télécharger la dernière image depuis DockerHub
+      shell: docker pull muhamd/symfony-app
+
+    - name: Redémarrer l'application avec Docker Compose
+      shell: docker compose up -d --build
+      args:
+        chdir: /chemin/vers/ton/projet

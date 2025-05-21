@@ -1,44 +1,228 @@
-{{ form_start(form) }}
+{% extends 'base.html.twig' %}
 
-    {{ form_errors(form) }}
+{% block title %}{{ form.vars.value.id ? 'Modifier Facture' : 'Créer Facture' }}{% endblock %}
 
-<div class="mb-3">
-    {{ form_label(form.invoiceNumber) }}
-    {{ form_widget(form.invoiceNumber, {'attr': {'class': 'form-control'}}) }}
-    {{ form_errors(form.invoiceNumber) }}
-</div>
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* Form styles matching the invoice index */
+        .page-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+            text-align: center;
+        }
 
-<div class="mb-3">
-    {{ form_label(form.billingDate) }}
-    {{ form_widget(form.billingDate, {'attr': {'class': 'form-control'}}) }}
-    {{ form_errors(form.billingDate) }}
-</div>
+        .page-header h1 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-<div class="mb-3">
-    {{ form_label(form.amount) }}
-    {{ form_widget(form.amount, {'attr': {'class': 'form-control'}}) }}
-    {{ form_errors(form.amount) }}
-</div>
+        .page-header h1 i {
+            margin-right: 12px;
+            color: #a5b4fc;
+        }
 
-<div class="mb-3">
-    {{ form_label(form.status) }}
-    {{ form_widget(form.status, {'attr': {'class': 'form-select'}}) }}
-    {{ form_errors(form.status) }}
-</div>
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeInUp 0.5s ease forwards;
+        }
 
-<div class="mb-3">
-    {{ form_label(form.note) }}
-    {{ form_widget(form.note, {'attr': {'class': 'form-control'}}) }}
-    {{ form_errors(form.note) }}
-</div>
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-<div class="mb-3">
-    {{ form_label(form.client) }}
-    {{ form_widget(form.client, {'attr': {'class': 'form-select'}}) }}
-    {{ form_errors(form.client) }}
-</div>
+        .form-group {
+            margin-bottom: 1.75rem;
+            position: relative;
+        }
 
-<button class="btn btn-primary">{{ button_label|default('Enregistrer') }}</button>
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
 
-{{ form_end(form)}}
-*
+        .form-control, .form-select {
+            width: 100%;
+            padding: 0.85rem 1.25rem;
+            font-size: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background-color: #f9fafb;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        .btn-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.85rem 2.5rem;
+            background: linear-gradient(to right, #4f46e5, #7c3aed);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(to right, #6366f1, #8b5cf6);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-error {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: block;
+        }
+
+        .is-invalid {
+            border-color: #fca5a5 !important;
+            background-color: #fef2f2 !important;
+        }
+
+        /* Status badge preview */
+        .status-preview {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .page-header {
+                padding: 1.5rem;
+            }
+
+            .form-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    {{ parent() }}
+
+    <div class="container mt-4">
+        <div class="page-header">
+            <h1>
+                <i class="fas {{ form.vars.value.id ? 'fa-edit' : 'fa-file-invoice' }}"></i>
+                {{ form.vars.value.id ? 'Modifier Facture' : 'Créer une Nouvelle Facture' }}
+            </h1>
+        </div>
+
+        <div class="form-container">
+            {{ form_start(form) }}
+            <div class="form-group">
+                {{ form_label(form.invoiceNumber) }}
+                {{ form_widget(form.invoiceNumber, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.invoiceNumber) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.billingDate) }}
+                {{ form_widget(form.billingDate, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(form.billingDate) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.amount) }}
+                <div class="input-group">
+                    {{ form_widget(form.amount, {'attr': {'class': 'form-control'}}) }}
+                    <span class="input-group-text">MAD</span>
+                </div>
+                {{ form_errors(form.amount) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.status) }}
+                <div class="d-flex align-items-center">
+                    {{ form_widget(form.status, {'attr': {'class': 'form-select'}}) }}
+                    <span class="status-preview status-{{ form.status.vars.value|lower }}">
+                            {{ form.status.vars.value }}
+                        </span>
+                </div>
+                {{ form_errors(form.status) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.note) }}
+                {{ form_widget(form.note, {'attr': {'class': 'form-control', 'rows': 4}}) }}
+                {{ form_errors(form.note) }}
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.client) }}
+                {{ form_widget(form.client, {'attr': {'class': 'form-select'}}) }}
+                {{ form_errors(form.client) }}
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save me-2"></i>
+                {{ button_label|default('Enregistrer') }}
+            </button>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://kit.fontawesome.com/c26cd2166c.js" crossorigin="anonymous"></script>
+    <script>
+        // Update status badge preview when status changes
+        document.querySelector('#{{ form.status.vars.id }}').addEventListener('change', function() {
+            const statusPreview = document.querySelector('.status-preview');
+            statusPreview.className = 'status-preview status-' + this.value.toLowerCase();
+            statusPreview.textContent = this.options[this.selectedIndex].text;
+        });
+
+        // Format amount field on blur
+        document.querySelector('#{{ form.amount.vars.id }}').addEventListener('blur', function() {
+            const value = parseFloat(this.value);
+            if (!isNaN(value)) {
+                this.value = value.toFixed(2);
+            }
+        });
+    </script>
+{% endblock %}

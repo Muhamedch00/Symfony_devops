@@ -1,39 +1,245 @@
-{{ form_start(form) }}
+{% extends 'base.html.twig' %}
+{% block title %}{{ form.vars.value.id ? 'Modifier Client' : 'Nouveau Client' }}{% endblock %}
 
-    {{ form_errors(form) }}
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        /* Form page specific styles */
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-700) 0%, var(--primary-800) 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(3, 105, 161, 0.15);
+        }
 
-<div class="mb-3">
-    {{ form_label(form.managerName) }}
-    {{ form_widget(form.managerName, {'attr': {'class': 'form-control'}}) }}
-    {{ form_errors(form.managerName) }}
-</div>
+        .page-header h1 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+        }
 
-<div class="mb-3">
-    {{ form_label(form.companyName) }}
-    {{ form_widget(form.companyName, {'attr': {'class': 'form-control'}}) }}
-    {{ form_errors(form.companyName) }}
-</div>
+        .page-header h1 i {
+            margin-right: 12px;
+            color: var(--primary-300);
+        }
 
-<div class="mb-3">
-    {{ form_label(form.phoneNumber) }}
-    {{ form_widget(form.phoneNumber, {'attr': {'class': 'form-control'}}) }}
-    {{ form_errors(form.phoneNumber) }}
-</div>
+        .form-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            max-width: 800px;
+            margin: 0 auto;
+        }
 
-<div class="mb-3">
-    {{ form_label(form.address) }}
-    {{ form_widget(form.address, {'attr': {'class': 'form-control'}}) }}
-    {{ form_errors(form.address) }}
-</div>
+        .form-container:hover {
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
 
+        .form-group {
+            margin-bottom: 1.75rem;
+            position: relative;
+        }
 
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--gray-700);
+            transition: all 0.3s ease;
+        }
 
-<div class="mb-3">
-    {{ form_label(form.country) }}
-    {{ form_widget(form.country, {'attr': {'class': 'form-control'}}) }}
-    {{ form_errors(form.country) }}
-</div>
+        .form-control {
+            width: 100%;
+            padding: 0.85rem 1.25rem;
+            font-size: 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            background-color: var(--gray-50);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-<button class="btn btn-primary">{{ button_label|default('Enregistrer') }}</button>
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-500);
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
 
-{{ form_end(form)}}
+        .form-group:focus-within label {
+            color: var(--primary-600);
+        }
+
+        .btn-submit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.85rem 2.5rem;
+            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-700) 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 14px rgba(0, 0, 0, 0.15);
+            background: linear-gradient(135deg, var(--primary-700) 0%, var(--primary-800) 100%);
+        }
+
+        .btn-submit i {
+            margin-right: 8px;
+        }
+
+        .form-error {
+            color: var(--red-600);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .is-invalid {
+            border-color: var(--red-300) !important;
+            background-color: var(--red-50) !important;
+        }
+
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(calc(-50% + 12px));
+            color: var(--gray-400);
+            font-size: 0.95rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 1.5rem;
+            }
+
+            .page-header {
+                padding: 1.5rem;
+            }
+
+            .form-control {
+                padding: 0.75rem 1rem;
+            }
+        }
+
+        /* Animation for form entry */
+        .form-container {
+            animation: fadeInUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+    {{ parent() }}
+    <div class="container mt-4">
+        <div class="page-header">
+            <h1>
+                <i class="fas {{ form.vars.value.id ? 'fa-user-edit' : 'fa-user-plus' }}"></i>
+                {{ form.vars.value.id ? 'Modifier Client' : 'Nouveau Client' }}
+            </h1>
+        </div>
+
+        <div class="form-container">
+            {{ form_start(form) }}
+            <div class="form-group">
+                {{ form_label(form.managerName) }}
+                {{ form_widget(form.managerName, {'attr': {'class': 'form-control'}}) }}
+                <i class="fas fa-user input-icon"></i>
+                <div class="form-error">{{ form_errors(form.managerName) }}</div>
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.companyName) }}
+                {{ form_widget(form.companyName, {'attr': {'class': 'form-control'}}) }}
+                <i class="fas fa-building input-icon"></i>
+                <div class="form-error">{{ form_errors(form.companyName) }}</div>
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.phoneNumber) }}
+                {{ form_widget(form.phoneNumber, {'attr': {'class': 'form-control'}}) }}
+                <i class="fas fa-phone input-icon"></i>
+                <div class="form-error">{{ form_errors(form.phoneNumber) }}</div>
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.address) }}
+                {{ form_widget(form.address, {'attr': {'class': 'form-control'}}) }}
+                <i class="fas fa-map-marker-alt input-icon"></i>
+                <div class="form-error">{{ form_errors(form.address) }}</div>
+            </div>
+
+            <div class="form-group">
+                {{ form_label(form.country) }}
+                {{ form_widget(form.country, {'attr': {'class': 'form-control'}}) }}
+                <i class="fas fa-globe input-icon"></i>
+                <div class="form-error">{{ form_errors(form.country) }}</div>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save"></i>
+                {{ button_label|default('Enregistrer') }}
+            </button>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://kit.fontawesome.com/c26cd2166c.js" crossorigin="anonymous"></script>
+    <script>
+        // Enhance form interactions
+        document.querySelectorAll('.form-control').forEach(input => {
+            // Add focus class to parent
+            input.addEventListener('focus', function() {
+                this.parentElement.classList.add('focused');
+            });
+
+            // Remove focus class if empty
+            input.addEventListener('blur', function() {
+                if (!this.value) {
+                    this.parentElement.classList.remove('focused');
+                }
+            });
+
+            // Initialize focused state for pre-filled fields
+            if (input.value) {
+                input.parentElement.classList.add('focused');
+            }
+        });
+    </script>
+{% endblock %}
