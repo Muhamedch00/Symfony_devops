@@ -15,7 +15,7 @@ pipeline {
 
         stage('Installation des dépendances PHP') {
             steps {
-                sh 'composer install --no-interaction --prefer-dist'
+                sh 'docker run --rm -v $PWD:/app -w /app composer:2 composer install --no-interaction --prefer-dist'
             }
         }
 
