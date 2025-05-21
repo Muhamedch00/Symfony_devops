@@ -3,16 +3,19 @@
   hosts: web
   become: true
 
+  vars:
+    image: "{{ image | default('muhamd/symfony-app:latest') }}"
+
   tasks:
     - name: Arrêter l'application Docker existante
       shell: docker compose down
       args:
-        chdir: /chemin/vers/ton/projet  # À remplacer par le chemin exact sur la machine distante
+        chdir: /home/mohamed/symfony_project  # <-- adapte ici au chemin réel sur ta machine distante
 
     - name: Télécharger la dernière image depuis DockerHub
-      shell: docker pull muhamd/symfony-app:36
+      shell: docker pull {{ image }}
 
     - name: Redémarrer l'application avec Docker Compose
       shell: docker compose up -d --build
       args:
-        chdir: /chemin/vers/ton/projet  # Même chemin que précédemment
+        chdir: /home/mohamed/symfony_project  # même chemin que ci-dessus
