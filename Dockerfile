@@ -24,4 +24,4 @@ RUN chown -R www-data:www-data /var/www/html
 EXPOSE 9000
 
 # Lancer PHP-FPM au démarrage du conteneur
-CMD["php-fpm"]
+CMD ["php-fpm"]
