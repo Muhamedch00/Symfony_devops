@@ -1,18 +1,24 @@
 pipeline {
     agent any
+
     environment {
         SONAR_TOKEN = credentials('sonar-token')
         DOCKER_IMAGE = "muhamd/symfony-app:${BUILD_NUMBER}"
-        SONARQUBE_IP = "172.17.0.1" // Remplacez par l'IP réelle de votre serveur SonarQube
     }
-    
+
     stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Cloner le dépôt') {
             steps {
                 git url: 'https://github.com/Muhamedch00/Symfony_devops.git'
             }
         }
-        
+
         stage('Installation des dépendances PHP') {
             steps {
                 sh '''
@@ -23,39 +29,32 @@ pipeline {
                 '''
             }
         }
-        
+
         stage('Tests Unitaires et Couverture') {
             steps {
                 sh '''
                     docker run --rm -v "$PWD":/app -w /app php:8.2-cli bash -c "
-                        apt-get update && apt-get install -y git zip unzip libzip-dev
-                        docker-php-ext-install zip
+                        apt-get update && apt-get install -y git zip unzip libzip-dev &&
+                        docker-php-ext-install zip &&
                         php -d memory_limit=-1 vendor/bin/phpunit --coverage-clover=coverage.xml
                     "
                 '''
             }
         }
-        
+
         stage('Analyse SonarQube') {
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    withCredentials([
-                        string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')
-                    ]) {
+                    withSonarQubeEnv('SonarQube') {
                         sh '''
-                            docker run --rm \
-                                --add-host=sonarqube:${SONARQUBE_IP} \
-                                -v "$PWD":/usr/src \
-                                sonarsource/sonar-scanner-cli \
+                            sonar-scanner \
                                 -Dsonar.projectKey=SymfonyDevOps \
                                 -Dsonar.sources=. \
-                                -Dsonar.exclusions=vendor/**,var/**,tests/** \
-                                -Dsonar.php.coverage.reportPaths=coverage.xml \
-                                -Dsonar.host.url=http://sonarqube:9000 \
-                                -Dsonar.login=$SONAR_TOKEN
+                                -Dsonar.exclusions=vendor/,var/,tests/** \
+                                -Dsonar.php.coverage.reportPaths=coverage.xml
                         '''
                     }
-                    
+
                     script {
                         try {
                             timeout(time: 1, unit: 'MINUTES') {
@@ -69,18 +68,16 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Build Docker') {
             steps {
-                sh """
-                    docker build -t ${DOCKER_IMAGE} .
-                """
+                sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
 
         stage('Push Docker') {
             when {
-                expression { 
+                expression {
                     return currentBuild.resultIsBetterOrEqualTo('UNSTABLE')
                 }
             }
@@ -93,18 +90,17 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )
                 ]) {
-                    sh """
-                        echo "Logging in as: $DOCKER_USER"
-                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin || exit 1
+                    sh '''
+                        echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                         docker push ${DOCKER_IMAGE}
-                    """
+                    '''
                 }
             }
         }
-        
+
         stage('Déploiement via Ansible') {
             when {
-                expression { 
+                expression {
                     return currentBuild.resultIsBetterOrEqualTo('UNSTABLE')
                 }
             }
@@ -118,7 +114,7 @@ pipeline {
             }
         }
     }
-    
+
     post {
         always {
             cleanWs()
@@ -131,6 +127,6 @@ pipeline {
         }
         unstable {
             echo 'Le pipeline est instable mais a continué.'
-        }
-    }
+        }
+    }
 }
