@@ -1,21 +1,27 @@
----
 - name: Déploiement de l'application Symfony
   hosts: web
   become: true
-
-  vars:
-    image: "{{ image | default('muhamd/symfony-app:latest') }}"
-
   tasks:
-    - name: Arrêter l'application Docker existante
-      shell: docker compose down
+
+    - name: Arrêter l'application existante (si elle tourne)
+      shell: docker compose down || true
       args:
-        chdir: /home/mohamed/symfony_project  # <-- adapte ici au chemin réel sur ta machine distante
+        chdir: /home/mohamed/app
+
+    - name: Supprimer l'ancien dossier (facultatif si cloné à chaque fois)
+      file:
+        path: /home/mohamed/app
+        state: absent
+
+    - name: Cloner le dépôt GitHub
+      git:
+        repo: https://github.com/Muhamedch00/Symfony_devops.git
+        dest: /home/mohamed/app
 
     - name: Télécharger la dernière image depuis DockerHub
-      shell: docker pull {{ image }}
+      shell: docker pull "{{ lookup('env', 'IMAGE') }}"
 
-    - name: Redémarrer l'application avec Docker Compose
-      shell: docker compose up -d --build
+    - name: Démarrer l'application avec Docker Compose
+      shell: docker compose up -d
       args:
-        chdir: /home/mohamed/symfony_project  # même chemin que ci-dessus
+        chdir: /home/mohamed/app
