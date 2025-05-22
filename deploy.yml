@@ -1,27 +1,16 @@
 - name: Déploiement de l'application Symfony
   hosts: web
-  become: true
+  become: false
   tasks:
-
-    - name: Arrêter l'application existante (si elle tourne)
-      shell: docker compose down || true
+    - name: Stopper l’application existante
+      shell: docker compose down
       args:
-        chdir: /home/mohamed/app
+        chdir: "{{ playbook_dir }}"
 
-    - name: Supprimer l'ancien dossier (facultatif si cloné à chaque fois)
-      file:
-        path: /home/mohamed/app
-        state: absent
+    - name: Récupérer la dernière image Docker
+      shell: docker pull {{ lookup('env', 'IMAGE') }}
 
-    - name: Cloner le dépôt GitHub
-      git:
-        repo: https://github.com/Muhamedch00/Symfony_devops.git
-        dest: /home/mohamed/app
-
-    - name: Télécharger la dernière image depuis DockerHub
-      shell: docker pull "{{ lookup('env', 'IMAGE') }}"
-
-    - name: Démarrer l'application avec Docker Compose
+    - name: Redémarrer l'application
       shell: docker compose up -d
       args:
-        chdir: /home/mohamed/app
+        chdir: "{{ playbook_dir }}"
