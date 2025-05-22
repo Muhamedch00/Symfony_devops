@@ -26,7 +26,7 @@
 
     - name: Attendre que l'application soit disponible
       uri:
-        url: http://localhost:8000
+        url: http://localhost:8000/login
         method: GET
         status_code: 200
       register: result
