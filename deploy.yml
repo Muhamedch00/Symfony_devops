@@ -1,16 +1,35 @@
+---
 - name: Déploiement de l'application Symfony
-  hosts: web
+  hosts: localhost
   become: false
+  vars:
+    image_name: "{{ lookup('env', 'IMAGE') }}"
+    container_name: symfony_app
+    container_port: 8000
+
   tasks:
     - name: Stopper l’application existante
-      shell: docker compose down
-      args:
-        chdir: "{{ playbook_dir }}"
+      shell: |
+        if docker ps -q -f name={{ container_name }}; then
+          docker stop {{ container_name }}
+          docker rm {{ container_name }}
+        fi
+      ignore_errors: true
 
     - name: Récupérer la dernière image Docker
-      shell: docker pull {{ lookup('env', 'IMAGE') }}
+      shell: docker pull {{ image_name }}
+      ignore_errors: true  
 
-    - name: Redémarrer l'application
-      shell: docker compose up -d
-      args:
-        chdir: "{{ playbook_dir }}"
+    - name: Lancer le conteneur Symfony
+      shell: |
+        docker run -d --name {{ container_name }} -p {{ container_port }}:8000 {{ image_name }}
+
+    - name: Attendre que l'application soit disponible
+      uri:
+        url: http://localhost:8000
+        method: GET
+        status_code: 200
+      register: result
+      retries: 10
+      delay: 3
+      until: result.status == 200
