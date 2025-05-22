@@ -80,7 +80,7 @@ pipeline {
       steps {
         echo '📦 Push de l’image Docker sur Docker Hub...'
         withCredentials([usernamePassword(
-          credentialsId: 'docker-hub-creds', 
+          credentialsId: 'docker-hub-creds',
           usernameVariable: 'DOCKER_USER',
           passwordVariable: 'DOCKER_PASS'
         )]) {
@@ -92,6 +92,7 @@ pipeline {
       }
     }
 
+    // ✅ Correction uniquement ici
     stage('Déploiement via Ansible') {
       when {
         expression { currentBuild.resultIsBetterOrEqualTo('UNSTABLE') }
@@ -99,10 +100,9 @@ pipeline {
       steps {
         script {
           try {
-            sh '''
-              echo "IMAGE=${DOCKER_IMAGE}" > .env
-              ansible-playbook -i inventory.ini deploy.yml
-            '''
+            sh """
+              IMAGE=${DOCKER_IMAGE} ansible-playbook -i inventory.ini deploy.yml
+            """
           } catch (Exception e) {
             echo "Erreur lors du déploiement : ${e.message}"
             currentBuild.result = 'FAILURE'
