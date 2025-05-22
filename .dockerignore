@@ -1,0 +1,9 @@
+.git
+.gitignore
+tests
+node_modules
+vendor
+var
+.env
+coverage.xml
+*.log
