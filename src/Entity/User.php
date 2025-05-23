@@ -165,12 +165,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-   public function removeClient(Client $client): static
+  public function removeClient(Client $client): static
 {
- if ($this->clients->removeElement($client) && $client->getUser() === $this) {
-    $client->setUser(null);
-}
+    if ($this->clients->removeElement($client) && $client->getUser() === $this) {
+        $client->setUser(null);
+    }
 
-return $this;
+    return $this;
 }
 }
