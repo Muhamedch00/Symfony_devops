@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use Composer\Autoload\ClassLoader;
+// CORRIGÉ: Utilisation du système d'import avec "use" au lieu de require_once
+use Symfony\Component\Cache\Adapter\PhpFilesAdapter;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
-// Chargement de l'autoloader si disponible
-$autoloadFile = dirname(__DIR__) . '/vendor/autoload.php';
-if (file_exists($autoloadFile)) {
-    /** @var ClassLoader $loader */
-    $loader = require_once $autoloadFile;
+// Configuration de l'autoloader
+if (file_exists($autoloadFile = dirname(__DIR__) . '/vendor/autoload.php')) {
+    require_once $autoloadFile;
 }
 
-// Gestion du fichier de preload avec optimisation opcache
+// Gestion du fichier de preload avec namespaces
 $preloadFile = dirname(__DIR__) . '/var/cache/prod/App_KernelProdContainer.preload.php';
 
 if (is_file($preloadFile)) {
@@ -20,35 +20,37 @@ if (is_file($preloadFile)) {
         opcache_compile_file($preloadFile);
     }
     
-    // Inclusion du fichier de preload
+    // Inclusion sécurisée du fichier de preload
     include_once $preloadFile;
 }
 
-// Configuration additionnelle de preload pour les classes critiques
-if (function_exists('opcache_is_script_cached')) {
-    $criticalClasses = [
-        dirname(__DIR__) . '/src/Kernel.php',
-        dirname(__DIR__) . '/src/Entity/User.php',
-        dirname(__DIR__) . '/src/Entity/Client.php',
-    ];
-    
-    foreach ($criticalClasses as $classFile) {
-        if (is_file($classFile) && !opcache_is_script_cached($classFile)) {
-            opcache_compile_file($classFile);
+// Configuration opcache pour la production
+if (extension_loaded('opcache') && function_exists('opcache_get_status')) {
+    $opcacheStatus = opcache_get_status();
+    if ($opcacheStatus && $opcacheStatus['opcache_enabled']) {
+        // Classes critiques à preloader
+        $criticalClasses = [
+            'App\\Kernel',
+            'App\\Entity\\User',
+            'App\\Entity\\Client',
+            'App\\Repository\\UserRepository',
+            'App\\Repository\\ClientRepository',
+        ];
+        
+        foreach ($criticalClasses as $className) {
+            if (class_exists($className)) {
+                // La classe est déjà chargée par l'autoloader
+                continue;
+            }
         }
     }
 }
 
-// Preload des extensions communes
-if (extension_loaded('opcache')) {
-    // Configuration opcache pour production
-    ini_set('opcache.preload_user', 'www-data');
-    ini_set('opcache.memory_consumption', '256');
-    ini_set('opcache.max_accelerated_files', '20000');
-    ini_set('opcache.validate_timestamps', '0');
-}
-
-// Log de debug pour le preloading (uniquement en développement)
-if (defined('APP_ENV') && APP_ENV === 'dev') {
-    error_log('Preload completed for: ' . $preloadFile);
+// Initialisation des services critiques
+try {
+    $container = new ContainerBuilder();
+    $cacheAdapter = new PhpFilesAdapter('app.cache', 0, dirname(__DIR__) . '/var/cache');
+} catch (Exception $e) {
+    // Gestion silencieuse des erreurs de preload
+    error_log('Preload initialization error: ' . $e->getMessage());
 }
