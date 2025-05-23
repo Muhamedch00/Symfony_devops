@@ -17,7 +17,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * Entité User représentant un utilisateur du système
  * 
- * @author Votre Nom
+ * @author Développeur
  * @since 1.0.0
  */
 #[ORM\Entity(repositoryClass: UserRepository::class)]
@@ -97,9 +97,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: Types::BOOLEAN)]
     private bool $isVerified = false;
 
-    /**
-     * Constructeur de l'entité User
-     */
     public function __construct()
     {
         $this->clients = new ArrayCollection();
@@ -107,9 +104,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->roles = ['ROLE_USER'];
     }
 
-    /**
-     * Callback executed before persisting the entity
-     */
     #[ORM\PrePersist]
     public function prePersist(): void
     {
@@ -119,9 +113,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->updatedAt = new \DateTime();
     }
 
-    /**
-     * Callback executed before updating the entity
-     */
     #[ORM\PreUpdate]
     public function preUpdate(): void
     {
@@ -168,17 +159,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * Retourne le nom complet de l'utilisateur
-     */
     public function getFullName(): string
     {
         return trim(sprintf('%s %s', $this->firstName ?? '', $this->lastName ?? ''));
     }
 
-    /**
-     * Retourne les initiales de l'utilisateur
-     */
     public function getInitials(): string
     {
         $firstInitial = $this->firstName ? substr($this->firstName, 0, 1) : '';
@@ -189,25 +174,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     // ==================== UserInterface Implementation ====================
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
     public function getUserIdentifier(): string
     {
         return (string) $this->email;
     }
 
     /**
-     * @see UserInterface
-     *
      * @return list<string>
      */
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // Guarantee every user at least has ROLE_USER
         if (!in_array('ROLE_USER', $roles, true)) {
             $roles[] = 'ROLE_USER';
         }
@@ -220,7 +197,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function setRoles(array $roles): static
     {
-        // Ensure ROLE_USER is always present
         if (!in_array('ROLE_USER', $roles, true)) {
             $roles[] = 'ROLE_USER';
         }
@@ -229,9 +205,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * Ajoute un rôle à l'utilisateur
-     */
     public function addRole(string $role): static
     {
         if (!in_array($role, $this->roles, true)) {
@@ -241,9 +214,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * Retire un rôle de l'utilisateur (sauf ROLE_USER)
-     */
     public function removeRole(string $role): static
     {
         if ($role !== 'ROLE_USER') {
@@ -253,9 +223,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * Vérifie si l'utilisateur a un rôle spécifique
-     */
     public function hasRole(string $role): bool
     {
         return in_array($role, $this->getRoles(), true);
@@ -263,9 +230,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     // ==================== PasswordAuthenticatedUserInterface Implementation ====================
 
-    /**
-     * @see PasswordAuthenticatedUserInterface
-     */
     public function getPassword(): ?string
     {
         return $this->password;
@@ -277,13 +241,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * @see UserInterface
-     */
     public function eraseCredentials(): void
     {
-        // If you store any temporary, sensitive data on the user, clear it here
-        // Example: $this->plainPassword = null;
+        // Clear any temporary sensitive data
     }
 
     // ==================== Clients Management ====================
@@ -297,8 +257,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * Retourne les clients actifs de l'utilisateur
-     * 
      * @return Collection<int, Client>
      */
     public function getActiveClients(): Collection
@@ -306,17 +264,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->clients->filter(fn(Client $client) => $client->isActive());
     }
 
-    /**
-     * Retourne le nombre total de clients
-     */
     public function getClientsCount(): int
     {
         return $this->clients->count();
     }
 
-    /**
-     * Retourne le nombre de clients actifs
-     */
     public function getActiveClientsCount(): int
     {
         return $this->getActiveClients()->count();
@@ -334,7 +286,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function removeClient(Client $client): static
     {
-        // CORRIGÉ: Fusion des conditions if imbriquées pour une meilleure lisibilité
+        // CORRIGÉ: Fusion des conditions if imbriquées
         if ($this->clients->removeElement($client) && $client->getUser() === $this) {
             $client->setUser(null);
         }
@@ -377,9 +329,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * Met à jour la date de dernière connexion
-     */
     public function updateLastLogin(): static
     {
         $this->lastLoginAt = new \DateTime();
@@ -399,18 +348,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * Active l'utilisateur
-     */
     public function activate(): static
     {
         $this->isActive = true;
         return $this;
     }
 
-    /**
-     * Désactive l'utilisateur
-     */
     public function deactivate(): static
     {
         $this->isActive = false;
@@ -428,9 +371,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    /**
-     * Marque l'utilisateur comme vérifié
-     */
     public function markAsVerified(): static
     {
         $this->isVerified = true;
@@ -439,17 +379,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     // ==================== Utility Methods ====================
 
-    /**
-     * Représentation string de l'utilisateur
-     */
     public function __toString(): string
     {
         return $this->getFullName() ?: $this->getUserIdentifier();
     }
 
-    /**
-     * Sérialise l'utilisateur pour les sessions
-     */
     public function __serialize(): array
     {
         return [
@@ -460,9 +394,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         ];
     }
 
-    /**
-     * Désérialise l'utilisateur depuis les sessions
-     */
     public function __unserialize(array $data): void
     {
         $this->id = $data['id'];
@@ -471,25 +402,16 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->isActive = $data['isActive'];
     }
 
-    /**
-     * Vérifie si l'utilisateur est un administrateur
-     */
     public function isAdmin(): bool
     {
         return $this->hasRole('ROLE_ADMIN');
     }
 
-    /**
-     * Vérifie si l'utilisateur est un super administrateur
-     */
     public function isSuperAdmin(): bool
     {
         return $this->hasRole('ROLE_SUPER_ADMIN');
     }
 
-    /**
-     * Retourne l'âge du compte en jours
-     */
     public function getAccountAge(): int
     {
         if (!$this->createdAt) {
@@ -499,9 +421,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return (int) $this->createdAt->diff(new \DateTime())->days;
     }
 
-    /**
-     * Vérifie si l'utilisateur s'est connecté récemment
-     */
     public function hasRecentLogin(int $days = 7): bool
     {
         if (!$this->lastLoginAt) {
@@ -514,7 +433,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 }
 
 // ============================================================================
-// src/Repository/ClientRepository.php - CODE COMPLET AVEC TOUTES LES MÉTHODES
+// src/Repository/ClientRepository.php - CODE COMPLET CORRIGÉ
 // ============================================================================
 
 <?php
@@ -672,6 +591,40 @@ class ClientRepository extends ServiceEntityRepository
                ->setParameter('user', $user);
         }
         
+        $this->applyCriteria($qb, $criteria);
+        
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Recherche paginée de clients
+     * 
+     * @param array<string, mixed> $criteria
+     */
+    public function searchPaginated(array $criteria = [], int $page = 1, int $limit = 20, ?User $user = null): Paginator
+    {
+        $qb = $this->createQueryBuilder('c');
+        
+        if ($user) {
+            $qb->andWhere('c.user = :user')
+               ->setParameter('user', $user);
+        }
+        
+        $this->applyCriteria($qb, $criteria);
+        
+        $qb->setFirstResult(($page - 1) * $limit)
+           ->setMaxResults($limit);
+        
+        return new Paginator($qb->getQuery());
+    }
+
+    /**
+     * Applique les critères de recherche au QueryBuilder
+     * 
+     * @param array<string, mixed> $criteria
+     */
+    private function applyCriteria(QueryBuilder $qb, array $criteria): void
+    {
         // Recherche par nom
         if (!empty($criteria['name'])) {
             $qb->andWhere(
@@ -731,31 +684,6 @@ class ClientRepository extends ServiceEntityRepository
                 $qb->addOrderBy('c.firstName', 'ASC');
             }
         }
-        
-        return $qb->getQuery()->getResult();
-    }
-
-    /**
-     * Recherche paginée de clients
-     * 
-     * @param array<string, mixed> $criteria
-     */
-    public function searchPaginated(array $criteria = [], int $page = 1, int $limit = 20, ?User $user = null): Paginator
-    {
-        $qb = $this->createQueryBuilder('c');
-        
-        if ($user) {
-            $qb->andWhere('c.user = :user')
-               ->setParameter('user', $user);
-        }
-        
-        // Application des mêmes critères que la méthode search
-        $this->applyCriteria($qb, $criteria);
-        
-        $qb->setFirstResult(($page - 1) * $limit)
-           ->setMaxResults($limit);
-        
-        return new Paginator($qb->getQuery());
     }
 
     // ==================== Statistiques ====================
@@ -814,17 +742,4 @@ class ClientRepository extends ServiceEntityRepository
         
         // Compléter les mois manquants avec 0
         $stats = [];
-        for ($month = 1; $month <= 12; $month++) {
-            $stats[] = [
-                'month' => sprintf('%04d-%02d', $year, $month),
-                'count' => 0
-            ];
-        }
-        
-        foreach ($result as $row) {
-            $monthIndex = (int) $row['month'] - 1;
-            $stats[$monthIndex]['count'] = (int) $row['count'];
-        }
-        
-        return $stats;
-    }
+        for ($month = 1;
