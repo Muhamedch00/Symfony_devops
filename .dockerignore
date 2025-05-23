@@ -1,8 +1,12 @@
 .git
 .gitignore
-tests
-node_modules
-vendor
-var
-coverage.xml
+.env
 *.log
+*.pem
+*.key
+*.bak
+var/
+vendor/
+tests/
+coverage.xml
+docker-compose.override.yml
