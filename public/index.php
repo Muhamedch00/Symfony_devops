@@ -5,9 +5,10 @@ use App\Kernel;
 $autoloadRuntime = dirname(__DIR__) . '/vendor/autoload_runtime.php';
 
 if (is_file($autoloadRuntime)) {
-    include_once $autoloadRuntime;
+    require $autoloadRuntime;
 } else {
-    throw new RuntimeException('autoload_runtime.php is missing. Run `composer install`.');
+    class MissingAutoloadRuntimeException extends \RuntimeException {}
+    throw new MissingAutoloadRuntimeException('autoload_runtime.php is missing. Run `composer install`.');
 }
 
 return function (array $context) {
